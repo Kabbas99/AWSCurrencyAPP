@@ -5,7 +5,7 @@ import io
 import boto3
 import json
 import botocore
-#import currency_converter
+import currency_converter
 
 sqs = boto3.client('sqs', region_name='us-east-1')
 s3 = boto3.client('s3', region_name='us-east-1')
@@ -13,6 +13,7 @@ s3 = boto3.client('s3', region_name='us-east-1')
 queue_url = "https://sqs.us-east-1.amazonaws.com/117670899390/SQSQueue"
 
 key_name = None
+csv_string = None
 
 def receive_message():
     response = sqs.receive_message(
@@ -37,6 +38,7 @@ receive_message()
 
 def get_file():
     file_data = s3.get_object(Bucket="inputbucketforqueue", Key=key_name)
+    global csv_string
     csv_string = file_data['Body'].read().decode('utf-8')
     reader = csv.DictReader(io.StringIO(csv_string))
     for row in reader:
@@ -44,4 +46,11 @@ def get_file():
 
 get_file()
 
-#def convert_currencies():
+def convert_currencies():
+    reader = csv.DictReader(io.StringIO(csv_string))
+    for row in reader:
+        if row["Currency"] != "GBP":
+            convert_currencies.convert(row["Price"], "GBP")
+            print(row["Price"])
+        
+convert_currencies()        
