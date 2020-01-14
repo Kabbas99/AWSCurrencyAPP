@@ -1,0 +1,67 @@
+{
+    "Resources": {
+        "SQSQueue": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+                "QueueName": "SQSQueue"
+            }
+        },
+        "QueuePolicy" : {
+            "Type" : "AWS::SQS::QueuePolicy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Id": "example-ID",
+                    "Statement": [
+                     {
+                      "Sid": "example-statement-ID",
+                      "Effect": "Allow",
+                      "Principal": {
+                       "AWS":"*"  
+                      },
+                      "Action": [
+                       "SQS:SendMessage"
+                      ],
+                      "Resource": {"Fn::GetAtt" : [ "SQSQueue", "Arn" ]},
+                      "Condition": {
+                         "ArnLike": { "aws:SourceArn": "arn:aws:s3:*:*:inputbucketforqueue" }
+                      }
+                     }
+                    ]
+                   },
+                   "Queues" : [{ "Ref" : "SQSQueue"}] 
+            }
+        },
+        "InputBucketForQueue": {
+            "Type": "AWS::S3::Bucket",
+            "DependsOn": ["QueuePolicy", "SQSQueue"],
+            "Properties": {
+                "AccessControl": "BucketOwnerFullControl",
+                "BucketName": "inputbucketforqueue",
+                "NotificationConfiguration": {
+                    "QueueConfigurations": [
+                        {
+                            "Event": "s3:ObjectCreated:*",
+                            "Queue": {"Fn::GetAtt" : [ "SQSQueue", "Arn" ]}
+                        }
+                    ]
+                }
+              }
+        },
+        "OutputBucketForEC2": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "AccessControl": "BucketOwnerFullControl",
+                "BucketName": "outputbuckerforec2"
+            }
+        },
+        "EC2Instance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "ImageId": "ami-00068cd7555f543d5",
+                "InstanceType": "t2.micro",
+                "KeyName": "currency"
+            }
+        }
+    }
+}
