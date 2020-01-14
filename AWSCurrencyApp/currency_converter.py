@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import csv
+import io
 import boto3
 import json
 import botocore
@@ -34,11 +36,12 @@ def receive_message():
 receive_message()
 
 def get_file():
-    file_data = s3.get_object(Bucket = "inputbucketforqueue", Key = key_name)
-    csv = botocore.response.StreamingBody.read(file_data["Body"])
-    print(csv)
+    file_data = s3.get_object(Bucket="inputbucketforqueue", Key=key_name)
+    csv_string = file_data['Body'].read().decode('utf-8')
+    reader = csv.DictReader(io.StringIO(csv_string))
+    for row in reader:
+        print(row)
 
 get_file()
 
 #def convert_currencies():
-
