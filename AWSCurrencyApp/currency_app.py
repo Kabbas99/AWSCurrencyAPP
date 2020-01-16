@@ -5,7 +5,9 @@ import io
 import boto3
 import json
 import botocore
-import currency_converter
+from currency_converter import CurrencyConverter
+
+c = CurrencyConverter()
 
 sqs = boto3.client('sqs', region_name='us-east-1')
 s3 = boto3.client('s3', region_name='us-east-1')
@@ -43,14 +45,18 @@ def get_file():
     reader = csv.DictReader(io.StringIO(csv_string))
     for row in reader:
         print(row)
+    print(" ")
 
 get_file()
 
 def convert_currencies():
     reader = csv.DictReader(io.StringIO(csv_string))
     for row in reader:
-        if row["Currency"] != "GBP":
-            convert_currencies.convert(row["Price"], "GBP")
-            print(row["Price"])
-        
+        if row["Currency"] != 'GBP':
+            row["Price"] = round(c.convert(float(row["Price"]), 'GBP'), 2)
+            print(row)
+        else:
+            print(row)  
+    print(csv_string)  
+    
 convert_currencies()        
