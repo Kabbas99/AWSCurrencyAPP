@@ -12,9 +12,7 @@ c = CurrencyConverter()
 seconds = time.time()
 sqs = boto3.client('sqs', region_name='us-east-1')
 s3 = boto3.client('s3', region_name='us-east-1')
-
 queue_url = "https://sqs.us-east-1.amazonaws.com/117670899390/SQSQueue"
-
 receipt_handle = None
 key_name = None
 csv_string = None
@@ -38,12 +36,12 @@ def receive_message():
     except KeyError:    
         raise
     else:
-        print(receipt_handle)
+        print("Reading " + receipt_handle)
         body = response["Messages"][0]["Body"]
         json_body = json.loads(body)
         global key_name
         key_name = json_body["Records"][0]["s3"]["object"]["key"]
-        print(key_name)
+        print("Reading " + key_name)
 
 def get_file():
     file_data = s3.get_object(Bucket="inputbucketforqueue", Key=key_name)
@@ -60,11 +58,10 @@ def convert_currencies():
     for index, row in enumerate(data):
         if row["Currency"] != 'GBP':
             data[index]["Price"] = round(c.convert(float(row["Price"]), 'GBP'), 2)
-    print(data)
     json_file = json.dumps(data, indent=4, sort_keys=True)
     print(json_file)
     file_key = "CSV" + str(seconds) + ".csv"
-    print(file_key)
+    print("New filename: " + file_key)
     s3.put_object(Body=json_file, Bucket="outputbuckerforec2", Key=file_key)        
 
 def delete_message():
