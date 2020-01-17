@@ -8,14 +8,20 @@ import botocore
 from currency_converter import CurrencyConverter
 import time
 
+class QueueProcessor:
+    sqs = sqs = boto3.client('sqs', region_name='us-east-1')
+    s3 = boto3.client('s3', region_name='us-east-1')
+    c = CurrencyConverter()
+
+    def __init__(self, queue_url, bucket_name):
+        self.queue_url = queue_url
+        self.bucket_name = bucket_name
+
 c = CurrencyConverter()
 seconds = time.time()
 sqs = boto3.client('sqs', region_name='us-east-1')
 s3 = boto3.client('s3', region_name='us-east-1')
 queue_url = "https://sqs.us-east-1.amazonaws.com/117670899390/SQSQueue"
-receipt_handle = None
-key_name = None
-csv_string = None
 
 def receive_message():
     try:
