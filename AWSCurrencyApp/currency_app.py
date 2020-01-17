@@ -37,19 +37,13 @@ def receive_message():
         receipt_handle = response["Messages"][0]["ReceiptHandle"]
     except KeyError:    
         raise
+    else:
         print(receipt_handle)
         body = response["Messages"][0]["Body"]
         json_body = json.loads(body)
         global key_name
         key_name = json_body["Records"][0]["s3"]["object"]["key"]
         print(key_name)
-
-while True:
-    try:
-        receive_message()
-    except KeyError:
-        print("No messages available. Trying again in 60 secs.")
-        time.sleep(60)
 
 def get_file():
     file_data = s3.get_object(Bucket="inputbucketforqueue", Key=key_name)
@@ -59,8 +53,6 @@ def get_file():
     for row in reader:
         print(row)
     print(" ")
-
-get_file()
 
 def convert_currencies():
     reader = csv.DictReader(io.StringIO(csv_string))
@@ -73,9 +65,7 @@ def convert_currencies():
     print(json_file)
     file_key = "CSV" + str(seconds) + ".csv"
     print(file_key)
-    s3.put_object(Body=json_file, Bucket="outputbuckerforec2", Key=file_key)
-
-convert_currencies()        
+    s3.put_object(Body=json_file, Bucket="outputbuckerforec2", Key=file_key)        
 
 def delete_message():
     response = sqs.delete_message(
@@ -84,8 +74,6 @@ def delete_message():
     )
     print("Deleted " + receipt_handle)
 
-delete_message()
-
 def delete_file():
     response = s3.delete_object(
         Bucket="inputbucketforqueue",
@@ -93,4 +81,13 @@ def delete_file():
     )
     print("Deleted " + key_name)
 
-delete_file()
+while True:
+    try:
+        receive_message()
+        delete_message()
+        get_file()
+        convert_currencies() 
+        delete_file()
+    except KeyError:
+        print("No messages available. Trying again in 60 secs.")
+        time.sleep(60)
