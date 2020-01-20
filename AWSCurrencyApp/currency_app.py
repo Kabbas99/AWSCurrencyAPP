@@ -13,6 +13,9 @@ class QueueProcessor:
     s3 = boto3.client('s3', region_name='us-east-1')
     c = CurrencyConverter()
     seconds = time.time()
+    receipt_handle = None
+    key_name = None
+    csv_string = None
 
     def __init__(self, queue_url, bucket_name):
         self.queue_url = queue_url
@@ -32,29 +35,26 @@ class QueueProcessor:
                 VisibilityTimeout=0,
                 WaitTimeSeconds=20
             )
-            global receipt_handle
-            receipt_handle = response["Messages"][0]["ReceiptHandle"]
+            self.receipt_handle = response["Messages"][0]["ReceiptHandle"]
         except KeyError:    
             raise
         else:
-            print("Reading " + receipt_handle)
+            print("Reading " + self.receipt_handle)
             body = response["Messages"][0]["Body"]
             json_body = json.loads(body)
-            global key_name
-            key_name = json_body["Records"][0]["s3"]["object"]["key"]
-            print("Reading " + key_name)
+            self.key_name = json_body["Records"][0]["s3"]["object"]["key"]
+            print("Reading " + self.key_name)
 
     def get_file(self):
-        file_data = self.s3.get_object(Bucket="inputbucketforqueue", Key=key_name)
-        global csv_string
-        csv_string = file_data['Body'].read().decode('utf-8')
-        reader = csv.DictReader(io.StringIO(csv_string))
+        file_data = self.s3.get_object(Bucket="inputbucketforqueue", Key=self.key_name)
+        self.csv_string = file_data['Body'].read().decode('utf-8')
+        reader = csv.DictReader(io.StringIO(self.csv_string))
         for row in reader:
             print(row)
         print(" ")
 
     def convert_currencies(self):
-        reader = csv.DictReader(io.StringIO(csv_string))
+        reader = csv.DictReader(io.StringIO(self.csv_string))
         data = list(reader)
         for index, row in enumerate(data):
             if row["Currency"] != 'GBP':
@@ -68,16 +68,16 @@ class QueueProcessor:
     def delete_message(self):
         response = self.sqs.delete_message(
             QueueUrl=self.queue_url,
-            ReceiptHandle=receipt_handle
+            ReceiptHandle=self.receipt_handle
         )
-        print("Deleted " + receipt_handle)
+        print("Deleted " + self.receipt_handle)
 
     def delete_file(self):
         response = self.s3.delete_object(
             Bucket="inputbucketforqueue",
-            Key=key_name
+            Key=self.key_name
         )
-        print("Deleted " + key_name)
+        print("Deleted " + self.key_name)
 
     def start(self):
         while True:
