@@ -8,9 +8,10 @@ import botocore
 from currency_converter import CurrencyConverter
 import time
 
+
 class QueueProcessor:
-    sqs = sqs = boto3.client('sqs', region_name='us-east-1')
-    s3 = boto3.client('s3', region_name='us-east-1')
+    sqs = sqs = boto3.client("sqs", region_name="us-east-1")
+    s3 = boto3.client("s3", region_name="us-east-1")
     c = CurrencyConverter()
     seconds = time.time()
 
@@ -18,77 +19,76 @@ class QueueProcessor:
         self.queue_url = queue_url
         self.bucket_name = bucket_name
 
+    # Polls the SQS queue and gets information from the message such as the receipt handle and the body, to then get the name of the file
     def receive_message(self):
+        receipt_handle = None
+        key_name = None
         try:
             response = self.sqs.receive_message(
                 QueueUrl=self.queue_url,
-                AttributeNames=[
-                    'SentTimestamp'
-                ],
+                AttributeNames=["SentTimestamp"],
                 MaxNumberOfMessages=1,
-                MessageAttributeNames=[
-                    'All'
-                ],
+                MessageAttributeNames=["All"],
                 VisibilityTimeout=0,
-                WaitTimeSeconds=20
+                WaitTimeSeconds=20,
             )
-            global receipt_handle
             receipt_handle = response["Messages"][0]["ReceiptHandle"]
-        except KeyError:    
+        except KeyError:
             raise
         else:
             print("Reading " + receipt_handle)
             body = response["Messages"][0]["Body"]
             json_body = json.loads(body)
-            global key_name
             key_name = json_body["Records"][0]["s3"]["object"]["key"]
             print("Reading " + key_name)
+            return receipt_handle, key_name
 
-    def get_file(self):
-        file_data = self.s3.get_object(Bucket="inputbucketforqueue", Key=key_name)
-        global csv_string
-        csv_string = file_data['Body'].read().decode('utf-8')
+    def get_file(self, key):
+        file_data = self.s3.get_object(Bucket="inputbucketforqueue", Key=key)
+        csv_string = file_data["Body"].read().decode("utf-8")
         reader = csv.DictReader(io.StringIO(csv_string))
         for row in reader:
             print(row)
         print(" ")
+        return csv_string
 
-    def convert_currencies(self):
+    def convert_currencies(self, csv_string):
         reader = csv.DictReader(io.StringIO(csv_string))
         data = list(reader)
         for index, row in enumerate(data):
-            if row["Currency"] != 'GBP':
-                data[index]["Price"] = round(self.c.convert(float(row["Price"]), 'GBP'), 2)
+            if row["Currency"] != "GBP":
+                data[index]["Price"] = round(
+                    self.c.convert(float(row["Price"]), "GBP"), 2
+                )
         json_file = json.dumps(data, indent=4, sort_keys=True)
         print(json_file)
         file_key = "CSV" + str(self.seconds) + ".csv"
         print("New filename: " + file_key)
-        self.s3.put_object(Body=json_file, Bucket="outputbuckerforec2", Key=file_key)        
+        self.s3.put_object(Body=json_file, Bucket="outputbuckerforec2", Key=file_key)
 
-    def delete_message(self):
+    def delete_message(self, receipt_handle):
         response = self.sqs.delete_message(
-            QueueUrl=self.queue_url,
-            ReceiptHandle=receipt_handle
+            QueueUrl=self.queue_url, ReceiptHandle=receipt_handle
         )
         print("Deleted " + receipt_handle)
 
-    def delete_file(self):
-        response = self.s3.delete_object(
-            Bucket="inputbucketforqueue",
-            Key=key_name
-        )
+    def delete_file(self, key_name):
+        response = self.s3.delete_object(Bucket="inputbucketforqueue", Key=key_name)
         print("Deleted " + key_name)
 
     def start(self):
         while True:
             try:
-                self.receive_message()
-                self.delete_message()
-                self.get_file()
-                self.convert_currencies() 
-                self.delete_file()
+                handler, key = self.receive_message()
+                self.delete_message(handler)
+                csv = self.get_file(key)
+                self.convert_currencies(csv)
+                self.delete_file(key)
             except KeyError:
                 print("No messages available. Trying again in 60 secs.")
                 time.sleep(60)
 
-my_queue = QueueProcessor("https://sqs.us-east-1.amazonaws.com/117670899390/SQSQueue", "inputbucketforqueue").start()
+
+# my_queue = QueueProcessor(
+#     "https://sqs.us-east-1.amazonaws.com/117670899390/SQSQueue", "inputbucketforqueue"
+# ).start()

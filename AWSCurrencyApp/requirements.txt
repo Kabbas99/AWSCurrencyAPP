@@ -1,0 +1,5 @@
+pytest
+moto
+black
+boto3
+CurrencyConverter==0.14
