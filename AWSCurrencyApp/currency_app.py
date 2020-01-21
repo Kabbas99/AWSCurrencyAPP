@@ -19,7 +19,7 @@ class QueueProcessor:
         self.queue_url = queue_url
         self.bucket_name = bucket_name
 
-    # Polls the SQS queue and gets information from the message such as the receipt handle and the body, to then get the name of the file
+    # Polls the SQS queue and gets information from the message such as the receipt handle and the body, to then get the name of the file 
     def receive_message(self):
         receipt_handle = None
         key_name = None
@@ -43,8 +43,9 @@ class QueueProcessor:
             print("Reading " + key_name)
             return receipt_handle, key_name
 
-    def get_file(self, key):
-        file_data = self.s3.get_object(Bucket="inputbucketforqueue", Key=key)
+    # Uses the key from receive_message() to access the inside of the .csv file
+    def get_file(self, key_name):
+        file_data = self.s3.get_object(Bucket="inputbucketforqueue", Key=key_name)
         csv_string = file_data["Body"].read().decode("utf-8")
         reader = csv.DictReader(io.StringIO(csv_string))
         for row in reader:
@@ -52,6 +53,7 @@ class QueueProcessor:
         print(" ")
         return csv_string
 
+    # Searches through the file to identify which rows are no GBP, and then converts the price of that row into GBP
     def convert_currencies(self, csv_string):
         reader = csv.DictReader(io.StringIO(csv_string))
         data = list(reader)
@@ -66,16 +68,19 @@ class QueueProcessor:
         print("New filename: " + file_key)
         self.s3.put_object(Body=json_file, Bucket="outputbuckerforec2", Key=file_key)
 
+    # Using the receipt _handle from receive_message() to delete the message from the SQS queue
     def delete_message(self, receipt_handle):
         response = self.sqs.delete_message(
             QueueUrl=self.queue_url, ReceiptHandle=receipt_handle
         )
         print("Deleted " + receipt_handle)
 
+    # Using the key from receive_message() this method deletes the .csv file from the s3 bucket
     def delete_file(self, key_name):
         response = self.s3.delete_object(Bucket="inputbucketforqueue", Key=key_name)
         print("Deleted " + key_name)
 
+    # This is the main method where the previous methods are called in a certain order, also within a while loop, ensuring the SQS queue is checked every 60 seconds to confirm there is a message in there
     def start(self):
         while True:
             try:
