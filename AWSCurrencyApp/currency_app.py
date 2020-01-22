@@ -44,8 +44,8 @@ class QueueProcessor:
             return receipt_handle, key_name
 
     # Uses the key from receive_message() to access the inside of the .csv file
-    def get_file(self, key_name):
-        file_data = self.s3.get_object(Bucket="inputbucketforqueue", Key=key_name)
+    def get_file(self, key_name, bucket_name):
+        file_data = self.s3.get_object(Bucket=bucket_name, Key=key_name)
         csv_string = file_data["Body"].read().decode("utf-8")
         reader = csv.DictReader(io.StringIO(csv_string))
         for row in reader:
