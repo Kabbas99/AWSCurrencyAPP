@@ -19,7 +19,7 @@ class QueueProcessor:
         self.queue_url = queue_url
         self.bucket_name = bucket_name
 
-    # Polls the SQS queue and gets information from the message such as the receipt handle and the body, to then get the name of the file 
+    # Polls the SQS queue and gets information from the message such as the receipt handle and the body, to then get the name of the file
     def receive_message(self):
         receipt_handle = None
         key_name = None
@@ -92,8 +92,3 @@ class QueueProcessor:
             except KeyError:
                 print("No messages available. Trying again in 60 secs.")
                 time.sleep(60)
-
-
-# my_queue = QueueProcessor(
-#     "https://sqs.us-east-1.amazonaws.com/117670899390/SQSQueue", "inputbucketforqueue"
-# ).start()
