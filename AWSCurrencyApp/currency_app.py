@@ -44,8 +44,8 @@ class QueueProcessor:
             return receipt_handle, key_name
 
     # Uses the key from receive_message() to access the inside of the .csv file
-    def get_file(self, key_name, bucket_name):
-        file_data = self.s3.get_object(Bucket=bucket_name, Key=key_name)
+    def get_file(self, key_name):
+        file_data = self.s3.get_object(Bucket=self.bucket_name, Key=key_name)
         csv_string = file_data["Body"].read().decode("utf-8")
         reader = csv.DictReader(io.StringIO(csv_string))
         for row in reader:
@@ -77,7 +77,7 @@ class QueueProcessor:
 
     # Using the key from receive_message() this method deletes the .csv file from the s3 bucket
     def delete_file(self, key_name):
-        response = self.s3.delete_object(Bucket="inputbucketforqueue", Key=key_name)
+        response = self.s3.delete_object(Bucket=self.bucket_name, Key=key_name)
         print("Deleted " + key_name)
 
     # This is the main method where the previous methods are called in a certain order, also within a while loop, ensuring the SQS queue is checked every 60 seconds to confirm there is a message in there
