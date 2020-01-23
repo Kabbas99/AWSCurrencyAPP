@@ -61,7 +61,7 @@
                 "ImageId": "ami-09d069a04349dc3cb",
                 "InstanceType": "t2.micro",
                 "KeyName": "currency",
-                "IamInstanceProfile": "AWSEC2S3",
+                "IamInstanceProfile": "EC2GODMODE",
                 "UserData": { "Fn::Base64": { "Fn::Join": [ "", 
                     ["#!/bin/bash\n",
                     "mkdir ~/virtualenvironment/\n",
