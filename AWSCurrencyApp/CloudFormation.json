@@ -63,7 +63,7 @@
                 "KeyName": "currency",
                 "IamInstanceProfile": "AWSEC2S3",
                 "UserData": { "Fn::Base64": { "Fn::Join": [ "", 
-                    "#!/bin/bash\n",
+                    ["#!/bin/bash\n",
                     "mkdir ~/virtualenvironment/\n",
                     "virtualenv ~/virtualenvironment/currency_app/\n",
                     "cd ~/virtualenvironment/currency_app/bin\n",
@@ -72,7 +72,7 @@
                     "aws s3 cp s3://awscurrencyconverterscriptbucket/start.py start.py\n",
                     "pip install boto3\n",
                     "pip install CurrencyConverter\n",
-                    "python start.py\n"
+                    "python start.py\n"]
                   ] } }
             }
         }
