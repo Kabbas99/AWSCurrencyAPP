@@ -52,7 +52,7 @@
             "Type": "AWS::S3::Bucket",
             "Properties": {
                 "AccessControl": "BucketOwnerFullControl",
-                "BucketName": "outputbuckerforec2"
+                "BucketName": "outputbucketforec2"
             }
         },
         "EC2Instance": {
