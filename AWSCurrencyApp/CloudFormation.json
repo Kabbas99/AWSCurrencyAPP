@@ -60,7 +60,20 @@
             "Properties": {
                 "ImageId": "ami-00068cd7555f543d5",
                 "InstanceType": "t2.micro",
-                "KeyName": "currency"
+                "KeyName": "currency",
+                "UserData": { "Fn::Base64": { "Fn::Join": [ "", 
+                    "#!/bin/bash\n",
+                    "export AWS_ACCESS_KEY_ID=\"AKIAJM5O3YQECTH2FCSQ\" AWS_SECRET_ACCESS_KEY=\"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\"\n",
+                    "mkdir ~/virtualenvironment/\n",
+                    "virtualenv ~/virtualenvironment/currency_app/\n",
+                    "cd ~/virtualenvironment/currency_app/bin\n",
+                    "source activate\n",
+                    "aws s3 cp s3://awscurrencyconverterscriptbucket/currency_app.py currency_app.py\n",
+                    "aws s3 cp s3://awscurrencyconverterscriptbucket/start.py start.py\n",
+                    "pip install boto3\n",
+                    "pip install CurrencyConverter\n",
+                    "python start.py\n"
+                  ] } }
             }
         }
     }
