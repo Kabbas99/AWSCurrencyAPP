@@ -58,7 +58,7 @@
         "EC2Instance": {
             "Type": "AWS::EC2::Instance",
             "Properties": {
-                "ImageId": "ami-00068cd7555f543d5",
+                "ImageId": "ami-09d069a04349dc3cb",
                 "InstanceType": "t2.micro",
                 "KeyName": "currency",
                 "IamInstanceProfile": "AWSEC2S3",
