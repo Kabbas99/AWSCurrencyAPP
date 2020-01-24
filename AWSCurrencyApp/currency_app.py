@@ -13,7 +13,6 @@ class QueueProcessor:
     sqs = sqs = boto3.client("sqs", region_name="us-east-1")
     s3 = boto3.client("s3", region_name="us-east-1")
     c = CurrencyConverter()
-    seconds = time.time()
 
     def __init__(self, queue_url, bucket_name):
         self.queue_url = queue_url
@@ -55,6 +54,7 @@ class QueueProcessor:
 
     # Searches through the file to identify which rows are no GBP, and then converts the price of that row into GBP
     def convert_currencies(self, csv_string):
+        seconds = time.time()
         reader = csv.DictReader(io.StringIO(csv_string))
         data = list(reader)
         for index, row in enumerate(data):
