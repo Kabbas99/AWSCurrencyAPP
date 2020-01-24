@@ -66,7 +66,7 @@ class QueueProcessor:
         print(json_file)
         file_key = "CSV" + str(self.seconds) + ".csv"
         print("New filename: " + file_key)
-        self.s3.put_object(Body=json_file, Bucket="outputbuckerforec2", Key=file_key)
+        self.s3.put_object(Body=json_file, Bucket="outputbucketforec2", Key=file_key)
 
     # Using the receipt _handle from receive_message() to delete the message from the SQS queue
     def delete_message(self, receipt_handle):
