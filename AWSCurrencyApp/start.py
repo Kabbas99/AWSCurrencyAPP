@@ -8,6 +8,7 @@ def start():
         "https://sqs.us-east-1.amazonaws.com/117670899390/SQSQueue",
         "inputbucketforqueue",
     )
+    my_queue.start()
 
 
 if __name__ == "__main__":

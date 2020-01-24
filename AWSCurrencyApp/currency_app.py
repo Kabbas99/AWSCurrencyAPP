@@ -64,7 +64,7 @@ class QueueProcessor:
                 )
         json_file = json.dumps(data, indent=4, sort_keys=True)
         print(json_file)
-        file_key = "CSV" + str(self.seconds) + ".csv"
+        file_key = "CSV" + str(seconds) + ".json"
         print("New filename: " + file_key)
         self.s3.put_object(Body=json_file, Bucket="outputbucketforec2", Key=file_key)
 
