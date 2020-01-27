@@ -60,7 +60,7 @@ class QueueProcessor:
         for index, row in enumerate(data):
             if row["Currency"] != "GBP":
                 data[index]["Price"] = round(
-                    self.c.convert(float(row["Price"]), "GBP"), 2
+                    self.c.convert(float(row["Price"]), row["Currency"], "GBP"), 2
                 )
         json_file = json.dumps(data, indent=4, sort_keys=True)
         print(json_file)
